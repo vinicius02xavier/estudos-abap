@@ -81,6 +81,8 @@ CLASS zclproduto IMPLEMENTATION.
 
 *CORRESPONDING atribui campos idênticos de tabelas diferentes como iguais
 *uso do MAPPING quando os campos possuem nomes diferentes
+*uso de EXCEPT para definir quais campos não devem ter os valores copiados
+*uso de BASE para usar uma estrutura como ponto de partida
     TYPES: BEGIN OF ty_relatorio,
              codigo    TYPE i,
              descricao TYPE c LENGTH 60,
@@ -95,8 +97,30 @@ CLASS zclproduto IMPLEMENTATION.
                                 valor = preco
                          ).
 
+    DATA(ls_copia) = CORRESPONDING ty_produto(
+                        lt_produto[ cod = 1 ]
+                        EXCEPT preco estoque
+                     ).
 
-    out->write( '******* CADASTRO DE PRODUTOS *******' ).
+    DATA(ls_base) = VALUE ty_produto(
+        cod = 999
+        nome = 'Produto temporário'
+        preco = 4200
+        estoque = 25
+    ).
+
+    DATA(ls_atualizado) = CORRESPONDING ty_produto(
+                            BASE ( ls_base )
+                            lt_produto[ cod = 1 ]
+                            EXCEPT preco estoque
+    ).
+
+    out->write( ls_relatorio ).
+    out->write( ls_copia ).
+    out->write( ls_atualizado ).
+
+
+    out->write( '\n******* CADASTRO DE PRODUTOS *******' ).
     LOOP AT lt_produto INTO ls_produto.
       out->write( |Código: { ls_produto-cod } - Produto: { ls_produto-nome } - Preço: { ls_produto-preco } - Estoque: { ls_produto-estoque }| ).
     ENDLOOP.
