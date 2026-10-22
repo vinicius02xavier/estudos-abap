@@ -79,6 +79,49 @@ CLASS zclproduto IMPLEMENTATION.
     APPEND LINES OF lt_novos_produtos TO lt_produto.
 
 
+    out->write( '\n******* CADASTRO DE PRODUTOS *******' ).
+    LOOP AT lt_produto INTO ls_produto.
+      out->write( |Código: { ls_produto-cod } - Produto: { ls_produto-nome } - Preço: { ls_produto-preco } - Estoque: { ls_produto-estoque }| ).
+    ENDLOOP.
+
+
+    out->write( |\n******* CONV *******| ).
+    DATA(ls_produto_conv) = lt_produto[ cod = 1 ].
+    DATA(lv_codigo_texto) = CONV string( ls_produto_conv-cod ).
+
+    DATA lo_tipo TYPE REF TO cl_abap_typedescr.
+    lo_tipo = cl_abap_typedescr=>describe_by_data( lv_codigo_texto ).
+
+    out->write( lo_tipo->absolute_name ).
+
+    DATA(lv_codigo_externo) = '2'.
+    DATA(lv_codigo_convertido) = CONV i( lv_codigo_externo ).
+
+    out->write( lt_produto[ cod = lv_codigo_convertido ] ).
+
+
+    TYPES ty_preco TYPE p LENGTH 10 DECIMALS 2.
+    DATA(lv_preco_texto) = '149.90'.
+    DATA(lv_preco_decimal) = CONV ty_preco( lv_preco_texto ).
+
+    out->write( lv_preco_decimal ).
+
+
+    out->write( |\n******* TRY CATCH *******| ).
+    DATA(lv_codigo0) = 'ABC'.
+
+    TRY.
+        DATA(lv_codigo) = CONV i( lv_codigo0 ).
+
+        out->write( lt_produto[ cod = lv_codigo ] ).
+    CATCH cx_sy_conversion_no_number.
+        out->write( 'Código informado é inválido!' ).
+    CATCH cx_sy_itab_line_not_found.
+        out->write( 'Produto não encontrado!' ).
+    ENDTRY.
+
+
+    out->write( |\n******* CORRESPONDING *******| ).
 *CORRESPONDING atribui campos idênticos de tabelas diferentes como iguais
 *uso do MAPPING quando os campos possuem nomes diferentes
 *uso de EXCEPT para definir quais campos não devem ter os valores copiados
@@ -118,12 +161,6 @@ CLASS zclproduto IMPLEMENTATION.
     out->write( ls_relatorio ).
     out->write( ls_copia ).
     out->write( ls_atualizado ).
-
-
-    out->write( '\n******* CADASTRO DE PRODUTOS *******' ).
-    LOOP AT lt_produto INTO ls_produto.
-      out->write( |Código: { ls_produto-cod } - Produto: { ls_produto-nome } - Preço: { ls_produto-preco } - Estoque: { ls_produto-estoque }| ).
-    ENDLOOP.
 
 
     "FIELD SYMBOLS altera linha diretamente na tabela, sem copiar os dados dela como na estrutura nem usar MODIFY.
