@@ -7,9 +7,32 @@ CLASS zclproduto DEFINITION
 
     INTERFACES if_oo_adt_classrun.
 
+    DATA gv_nome TYPE string.
+
+    METHODS definir_nome IMPORTING iv_nome TYPE string.
+    METHODS obter_nome RETURNING VALUE(rv_nome) TYPE string.
+    METHODS formatar_nome IMPORTING iv_nome TYPE string RETURNING VALUE(rv_nome_formatado) TYPE string.
+    METHODS calcular_estoque IMPORTING iv_preco TYPE wrbtr iv_quantidade TYPE i RETURNING VALUE(rv_total) TYPE wrbtr.
+
 ENDCLASS.
 
 CLASS zclproduto IMPLEMENTATION.
+  METHOD definir_nome.
+    gv_nome = iv_nome.
+  ENDMETHOD.
+
+  METHOD obter_nome.
+    rv_nome = gv_nome.
+  ENDMETHOD.
+
+  METHOD formatar_nome.
+    rv_nome_formatado = to_upper( iv_nome ).
+  ENDMETHOD.
+
+  METHOD calcular_estoque.
+    rv_total = iv_preco * iv_quantidade.
+  ENDMETHOD.
+
   METHOD if_oo_adt_classrun~main.
 
     TYPES: BEGIN OF ty_produto,
@@ -114,11 +137,33 @@ CLASS zclproduto IMPLEMENTATION.
         DATA(lv_codigo) = CONV i( lv_codigo0 ).
 
         out->write( lt_produto[ cod = lv_codigo ] ).
-    CATCH cx_sy_conversion_no_number.
+      CATCH cx_sy_conversion_no_number.
         out->write( 'Código informado é inválido!' ).
-    CATCH cx_sy_itab_line_not_found.
+      CATCH cx_sy_itab_line_not_found.
         out->write( 'Produto não encontrado!' ).
     ENDTRY.
+
+
+    out->write( |\n******* CLASSES E OBJETOS *******| ).
+    DATA(lo_produto) = NEW zclproduto(  ).
+
+    lo_produto->definir_nome( 'Mouse' ).
+
+    out->write( lo_produto->gv_nome ).
+
+    DATA(lv_nome) = lo_produto->obter_nome(  ).
+
+    out->write( lv_nome ).
+
+    DATA(lv_nome_formatado) = lo_produto->formatar_nome( lv_nome ).
+
+    out->write( lv_nome_formatado ).
+
+    DATA(lv_valor_estoque) = lo_produto->calcular_estoque(
+                                         iv_preco = '80.00'
+                                         iv_quantidade = 25 ).
+
+    out->write( lv_valor_estoque ).
 
 
     out->write( |\n******* CORRESPONDING *******| ).
