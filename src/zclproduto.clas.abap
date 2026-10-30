@@ -7,12 +7,21 @@ CLASS zclproduto DEFINITION
 
     INTERFACES if_oo_adt_classrun.
 
+    TYPES ty_preco TYPE p LENGTH 10 DECIMALS 2.
+
     DATA gv_nome TYPE string.
+    DATA gv_preco TYPE ty_preco.
+    DATA gv_quantidade TYPE i.
 
     METHODS definir_nome IMPORTING iv_nome TYPE string.
     METHODS obter_nome RETURNING VALUE(rv_nome) TYPE string.
     METHODS formatar_nome IMPORTING iv_nome TYPE string RETURNING VALUE(rv_nome_formatado) TYPE string.
-    METHODS calcular_estoque IMPORTING iv_preco TYPE wrbtr iv_quantidade TYPE i RETURNING VALUE(rv_total) TYPE wrbtr.
+    METHODS calcular_estoque RETURNING VALUE(rv_total) TYPE ty_preco.
+    METHODS definir_preco IMPORTING iv_preco TYPE ty_preco.
+    METHODS definir_quantidade IMPORTING iv_quantidade TYPE i.
+
+*constructor obriga a inserção de valores nos parâmetros a fim de evitar esquecimento.
+    METHODS constructor IMPORTING iv_preco TYPE ty_preco OPTIONAL iv_quantidade TYPE i OPTIONAL.
 
 ENDCLASS.
 
@@ -29,15 +38,28 @@ CLASS zclproduto IMPLEMENTATION.
     rv_nome_formatado = to_upper( iv_nome ).
   ENDMETHOD.
 
+  METHOD definir_preco.
+    gv_preco = iv_preco.
+  ENDMETHOD.
+
   METHOD calcular_estoque.
-    rv_total = iv_preco * iv_quantidade.
+    rv_total = gv_preco * gv_quantidade.
+  ENDMETHOD.
+
+  METHOD definir_quantidade.
+    gv_quantidade = iv_quantidade.
+  ENDMETHOD.
+
+  METHOD constructor.
+    gv_preco = iv_preco.
+    gv_quantidade = iv_quantidade.
   ENDMETHOD.
 
   METHOD if_oo_adt_classrun~main.
 
     TYPES: BEGIN OF ty_produto,
              cod     TYPE i,
-             nome    TYPE c LENGTH 60,
+             nome    TYPE string,
              preco   TYPE p LENGTH 10 DECIMALS 2,
              estoque TYPE i,
            END OF ty_produto.
@@ -147,7 +169,8 @@ CLASS zclproduto IMPLEMENTATION.
     out->write( |\n******* CLASSES E OBJETOS *******| ).
     DATA(lo_produto) = NEW zclproduto(  ).
 
-    lo_produto->definir_nome( 'Mouse' ).
+    DATA(ls_busca) = lt_produto[ cod = 2 ].
+    lo_produto->definir_nome( ls_busca-nome ).
 
     out->write( lo_produto->gv_nome ).
 
@@ -159,11 +182,20 @@ CLASS zclproduto IMPLEMENTATION.
 
     out->write( lv_nome_formatado ).
 
-    DATA(lv_valor_estoque) = lo_produto->calcular_estoque(
-                                         iv_preco = '80.00'
-                                         iv_quantidade = 25 ).
+    lo_produto->definir_preco( iv_preco = ls_busca-preco ).
+    lo_produto->definir_quantidade( iv_quantidade = ls_busca-estoque ).
+
+    DATA(lv_valor_estoque) = lo_produto->calcular_estoque( ).
 
     out->write( lv_valor_estoque ).
+
+
+    out->write( |\n******* CONSTRUCTOR *******| ).
+    DATA(lo_produto1) = NEW zclproduto(
+                                        iv_preco = '80.00'
+                                        iv_quantidade = 25 ).
+
+    out->write( lo_produto1->calcular_estoque( ) ).
 
 
     out->write( |\n******* CORRESPONDING *******| ).
