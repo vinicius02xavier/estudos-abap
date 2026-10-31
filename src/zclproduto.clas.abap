@@ -9,10 +9,6 @@ CLASS zclproduto DEFINITION
 
     TYPES ty_preco TYPE p LENGTH 10 DECIMALS 2.
 
-    DATA gv_nome TYPE string.
-    DATA gv_preco TYPE ty_preco.
-    DATA gv_quantidade TYPE i.
-
     METHODS definir_nome IMPORTING iv_nome TYPE string.
     METHODS obter_nome RETURNING VALUE(rv_nome) TYPE string.
     METHODS formatar_nome IMPORTING iv_nome TYPE string RETURNING VALUE(rv_nome_formatado) TYPE string.
@@ -22,6 +18,13 @@ CLASS zclproduto DEFINITION
 
 *constructor obriga a inserção de valores nos parâmetros a fim de evitar esquecimento.
     METHODS constructor IMPORTING iv_preco TYPE ty_preco OPTIONAL iv_quantidade TYPE i OPTIONAL.
+
+
+  PRIVATE SECTION.
+
+    DATA gv_nome TYPE string.
+    DATA gv_preco TYPE ty_preco.
+    DATA gv_quantidade TYPE i.
 
 ENDCLASS.
 
@@ -172,7 +175,7 @@ CLASS zclproduto IMPLEMENTATION.
     DATA(ls_busca) = lt_produto[ cod = 2 ].
     lo_produto->definir_nome( ls_busca-nome ).
 
-    out->write( lo_produto->gv_nome ).
+    out->write( lo_produto->obter_nome(  ) ).
 
     DATA(lv_nome) = lo_produto->obter_nome(  ).
 
