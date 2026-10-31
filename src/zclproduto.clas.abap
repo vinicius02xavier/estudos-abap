@@ -12,14 +12,15 @@ CLASS zclproduto DEFINITION
     METHODS definir_nome IMPORTING iv_nome TYPE string.
     METHODS obter_nome RETURNING VALUE(rv_nome) TYPE string.
     METHODS formatar_nome IMPORTING iv_nome TYPE string RETURNING VALUE(rv_nome_formatado) TYPE string.
+*RAISING declara uma exceção que o método pode lançar.
+    METHODS definir_preco IMPORTING iv_preco TYPE ty_preco RAISING cx_sy_arg_out_of_domain.
+    METHODS definir_quantidade IMPORTING iv_quantidade TYPE i RAISING cx_sy_arg_out_of_domain.
     METHODS calcular_estoque RETURNING VALUE(rv_total) TYPE ty_preco.
-    METHODS definir_preco IMPORTING iv_preco TYPE ty_preco.
-    METHODS definir_quantidade IMPORTING iv_quantidade TYPE i.
 
 *constructor obriga a inserção de valores nos parâmetros a fim de evitar esquecimento.
     METHODS constructor IMPORTING iv_preco TYPE ty_preco OPTIONAL iv_quantidade TYPE i OPTIONAL.
 
-
+*atributos na PRIVATE SECTION, para evitar acessos indevidos.
   PRIVATE SECTION.
 
     DATA gv_nome TYPE string.
@@ -42,15 +43,24 @@ CLASS zclproduto IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD definir_preco.
+    IF iv_preco < 0.
+*RAISE EXCEPTION TYPE lança uma exceção durante a execução.
+        RAISE EXCEPTION TYPE cx_sy_arg_out_of_domain.
+    ENDIF.
+
     gv_preco = iv_preco.
+  ENDMETHOD.
+
+  METHOD definir_quantidade.
+    IF iv_quantidade < 0.
+        RAISE EXCEPTION TYPE cx_sy_arg_out_of_domain.
+    ENDIF.
+
+    gv_quantidade = iv_quantidade.
   ENDMETHOD.
 
   METHOD calcular_estoque.
     rv_total = gv_preco * gv_quantidade.
-  ENDMETHOD.
-
-  METHOD definir_quantidade.
-    gv_quantidade = iv_quantidade.
   ENDMETHOD.
 
   METHOD constructor.
@@ -185,12 +195,16 @@ CLASS zclproduto IMPLEMENTATION.
 
     out->write( lv_nome_formatado ).
 
-    lo_produto->definir_preco( iv_preco = ls_busca-preco ).
-    lo_produto->definir_quantidade( iv_quantidade = ls_busca-estoque ).
+    TRY.
+        lo_produto->definir_preco( iv_preco = ls_busca-preco ).
+        lo_produto->definir_quantidade( iv_quantidade = ls_busca-estoque ).
 
-    DATA(lv_valor_estoque) = lo_produto->calcular_estoque( ).
+        DATA(lv_valor_estoque) = lo_produto->calcular_estoque( ).
 
-    out->write( lv_valor_estoque ).
+        out->write( lv_valor_estoque ).
+    CATCH cx_sy_arg_out_of_domain.
+        out->write( 'Preço ou quantidade inválida.' ).
+    ENDTRY.
 
 
     out->write( |\n******* CONSTRUCTOR *******| ).
